@@ -1,0 +1,2 @@
+https://github.com/Xaymar/obs-StreamFX/0.12.0b299
+https://github.com/univrsal/tuna/v1.9.7
