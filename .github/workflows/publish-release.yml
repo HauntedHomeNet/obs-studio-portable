@@ -2,7 +2,8 @@ name: Build 🏗️ and Publish 📦 release
 
 on:
   push:
-    tags: ['*']
+    branches:
+      - main
 
 jobs:
   create-release:
@@ -92,3 +93,33 @@ jobs:
           exit 1
         fi
         gh release edit "${{ github.ref }}" --draft=false
+
+    - name: Extract branch name
+      id: branch
+      shell: bash
+      run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
+
+    - name: Calculate version
+      uses: paulhatch/semantic-version@v5.0.0-beta
+      id: semver
+      with:
+        version_format: ${major}.${minor}.${patch}-${{ steps.branch.outputs.branch }}.$GITHUB_RUN_NUMBER
+        major_pattern: /!:/
+        minor_pattern: /^feat(?:\(?\S*\)?)?:/
+        search_commit_body: true
+      
+    - name: Format string
+      id: version
+      shell: bash
+      run: |
+        if [[ ${{ steps.branch.outputs.branch }} == "main" ]]; then
+          echo "version=$(echo "$( cut -d '-' -f 1 <<< "${{ steps.semver.outputs.version }}")")" >> $GITHUB_OUTPUT
+        else
+          echo "version=$(echo ${{ steps.semver.outputs.version }} | sed "s/\//-/")" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Tag on main
+      if: steps.branch.outputs.branch == 'main'
+      uses: actions-ecosystem/action-push-tag@v1
+      with:
+        tag: ${{ steps.version.outputs.version }}
