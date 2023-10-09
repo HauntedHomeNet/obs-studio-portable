@@ -2,6 +2,8 @@ name: Build 🏗️ and Publish 📦 release
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
   create-release:
